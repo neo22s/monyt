@@ -6,14 +6,12 @@
  * @author Chema Garrido <chema@garridodiaz.com>
  * @license GPL v3
  */
-
-//error_reporting(E_ERROR | E_WARNING | E_PARSE | E_NOTICE);
 error_reporting(0);
 
-define('MONYT_SCRIPT_VERSION', '2.0.0 Beta' );
+if (version_compare(PHP_VERSION, '5.3', '<='))
+    die('You need PHP 5.3 or newer to run Monyt server script.');
 
-
-////////// BEGIN OF DEFAULT CONFIG AREA REVIEW ////////
+//////////////// BEGIN OF DEFAULT CONFIG AREA REVIEW ////////////////
 
 // Use authentication - best choice only works with Monyt PRO
 // If set to FALSE no authentication
@@ -24,6 +22,9 @@ define('ADMIN_PASSWORD','password');     //  CHANGE THIS TO ENABLE AUTHENTICATIO
 
 
 //////////////// DO NOT MODIFY FROM HERE ///////////////////
+
+define('MONYT_SCRIPT_VERSION', '2.0.0 Beta' );
+
 
 // authentication needed?
 if ( USE_AUTHENTICATION === TRUE AND ADMIN_PASSWORD != 'password' AND 
@@ -70,15 +71,17 @@ else
  */
 function server_status()
 {
-    $aStats = array( 'monyt' => MONYT_SCRIPT_VERSION );
+    $aStats['monyt']  = MONYT_SCRIPT_VERSION;
 
     $aStats['uptime'] = trim( file_get_contents("/proc/uptime") );
 
+    //processor usage
     $load = file_get_contents("/proc/loadavg");
     $load = explode( ' ', $load );
 
     $aStats['load'] = $load[0].', '.$load[1].', '.$load[2];
 
+    //memory info
     $memory = file( '/proc/meminfo' );
     foreach( $memory as $line )
     {
@@ -94,6 +97,7 @@ function server_status()
         }
     }
 
+    //har disks info
     $aStats['hd'] = array();
 
     foreach( file('/proc/mounts') as $mount )
@@ -128,6 +132,7 @@ function server_status()
         }
     }
 
+    //networks info
     $ifname = NULL;
 
     if( file_exists('/etc/network/interfaces') )
@@ -176,7 +181,7 @@ function server_status()
  */
 function server_info()
 {
-        $aCheck = array
+    $aCheck = array
     (
         'monyt'     => MONYT_SCRIPT_VERSION,
         'distro'    => '',
@@ -223,17 +228,11 @@ function server_info()
     foreach( $cpu as $line )
     {
         if( preg_match( '/^vendor_id\s*:\s*(.+)$/i', $line, $m ) )
-        {
             $vendor = $m[1];
-        }
-        else if( preg_match( '/^model\s+name\s*:\s*(.+)$/i', $line, $m ) )
-        {
+        elseif( preg_match( '/^model\s+name\s*:\s*(.+)$/i', $line, $m ) )
             $model = $m[1];
-        }
-        else if( preg_match( '/^processor\s*:\s*\d+$/i', $line ) )
-        {
+        elseif( preg_match( '/^processor\s*:\s*\d+$/i', $line ) )
             $cores++;
-        }
     }
     
     $aCheck['cpu']    = "$vendor, $model";
