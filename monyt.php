@@ -113,6 +113,10 @@ class Monyt{
         
         //hard disks info
         $aStats['hd'] = array();
+        //mounts we will display always
+        $mounts_allowed = array('/','/tmp','/usr','/var','/home');
+        //amount of mounts to display
+        $mounts = 5;
 
         foreach( file('/proc/mounts') as $mount )
         {
@@ -127,7 +131,7 @@ class Monyt{
                     $total  = disk_total_space($folder) / 1024;
                     $free   = disk_free_space($folder) / 1024;
 
-                    if( $total > 0 )
+                    if( $total > 0  AND ($mounts > 0 OR in_array($folder,$mounts_allowed)) )
                     {
                         $used   = $total - $free;
                         $used_perc = ( $used * 100.0 ) / $total;
@@ -141,6 +145,7 @@ class Monyt{
                             'used_perc' => $used_perc,
                             'mount' => $folder
                         );
+                        $mounts--;
                     }
                 }
             }
